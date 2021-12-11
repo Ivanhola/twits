@@ -1,6 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from . models import Room
-
+from . forms import RoomForm
 # rooms = [
 #      {'id':1 , 'name':'Lets learn python!'},
 #      {'id':2 , 'name':'Design with me'},
@@ -21,3 +21,16 @@ def room(request, pk):
     context = {'room': room}
     return render(request, "base/room.html", context)
 
+
+def CreateRoom(request):
+    form = RoomForm
+
+# Create method to submit forms onto the database
+    if request.method == "POST":
+        form = RoomForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+
+    context = {'form':form}
+    return render(request, 'base/room_form.html', context)
