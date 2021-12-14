@@ -1,13 +1,17 @@
-from django import forms
 from django.shortcuts import render, redirect
 from django.db.models import Q
+from django.http import HttpResponse
 from . models import Room, Topic
 from . forms import RoomForm
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 def loginPage(request):
+
+    if request.user.is_authenticated:
+        return redirect('home')
 
     if request.method == 'POST': #if form was submitted
         username = request.POST.get('username')
@@ -30,6 +34,10 @@ def loginPage(request):
 
     context = {}
     return render(request, 'base/login_register.html', context)
+
+def logoutUser(request):
+    logout(request)
+    return redirect('home')
 
 def home(request):
     
@@ -58,6 +66,7 @@ def room(request, pk):
 
 #CRUD Operations ----Room---
 
+@login_required(login_url='login')
 def CreateRoom(request):
     form = RoomForm()
 
@@ -71,10 +80,15 @@ def CreateRoom(request):
     context = {'form':form}
     return render(request, 'base/room_form.html', context)
 
+@login_required(login_url='login')
 def UpdateRoom(request, pk):
     
     room = Room.objects.get(id=pk) #Get a specific room with primary key (pk)
     form = RoomForm(instance=room) #Set the form data equal to the room data (pk)
+
+    if request.user != room.host:
+        return HttpResponse("You are not allowed here!")
+
 
     #If the form is submitted redirect to home
     if request.method == "POST":
@@ -86,8 +100,14 @@ def UpdateRoom(request, pk):
     context = {'form': form}
     return render(request, "base/room_form.html", context)
 
+@login_required(login_url='login')
 def DeleteRoom(request, pk):
     room = Room.objects.get(id=pk)
+
+    if request.user != room.host:
+        return HttpResponse("You are not allowed here!")
+
+
     if request.method == 'POST':
         room.delete()
         return redirect('home')
