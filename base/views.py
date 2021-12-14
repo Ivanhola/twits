@@ -7,14 +7,17 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
 
 def loginPage(request):
+
+    page = 'login'
 
     if request.user.is_authenticated:
         return redirect('home')
 
     if request.method == 'POST': #if form was submitted
-        username = request.POST.get('username')
+        username = request.POST.get('username').lower() #lowercases username, they can login with whatever case
         password = request.POST.get('password')
 
         try:
@@ -32,12 +35,29 @@ def loginPage(request):
 
     
 
-    context = {}
+    context = {'page':page}
     return render(request, 'base/login_register.html', context)
 
 def logoutUser(request):
     logout(request)
     return redirect('home')
+
+def registerPage(request):
+    form = UserCreationForm() #Default creation form for DJANGO users
+
+    if request.method == "POST":
+        form = UserCreationForm(request.POST) #Passed in data
+        if form.is_valid():
+            user = form.save(commit=False) #Get user object but not save ("Freeze in time")
+            user.username = user.username.lower() #cleaning up the user information
+            user.save()
+            login(request, user) #once user is saved, log them in
+            return redirect('home')
+        else:
+            messages.error(request, "An error has occurred during registration")
+
+    context = {"form":form}
+    return render(request, 'base/login_register.html', context)
 
 def home(request):
     
