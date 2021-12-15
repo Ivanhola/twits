@@ -12,6 +12,35 @@
     {% block content %}
     <h1>{{room.name}}</h1>
 
+    <p>{{room.description}}</p>
+
+    <div class="comment-wrapper">
+        <h3>Conversation</h3>
+        <hr>
+        {% for comment in comments %}
+
+        <div>
+            <small>@{{comment.user}}  {{comment.created|timesince}} ago</small>
+            <p>{{comment.body}}</p>
+            <hr>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% if request.user.is_authenticated %}
+    <div class="comment-form">
+        <form method="POST" action="">
+            {% csrf_token %}
+            <input type="text" name="body" placeholder="Write your message here..."/>
+        </form>
+
+    </div>
+
+    {% endif %}
+    
     {% endblock content %}
 </body>
 </html>

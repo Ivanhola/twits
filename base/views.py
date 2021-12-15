@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.db.models import Q
 from django.http import HttpResponse
-from . models import Room, Topic
+from . models import Room, Topic, Message
 from . forms import RoomForm
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
@@ -9,6 +9,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 
+
+# ------------------------ USER LOGINS ---------------------------
 def loginPage(request):
 
     page = 'login'
@@ -59,6 +61,8 @@ def registerPage(request):
     context = {"form":form}
     return render(request, 'base/login_register.html', context)
 
+#------------------------- MAIN PAGES --------------------------
+
 def home(request):
     
     #Main list data being shown
@@ -80,11 +84,21 @@ def home(request):
 def room(request, pk):
 
     room = Room.objects.get(id=pk)
-    context = {'room': room}
+    comments = room.message_set.all().order_by('-created') #gets the set of objects related to object. Called by objname in lowercase
+    if request.method == "POST":
+        comment =  Message.objects.create(
+            user = request.user,
+            room = room,
+            body = request.POST.get('body') #data that was submitted via input 'body'
+        )
+        return redirect('room', pk=room.id)
+
+
+    context = {'room': room, 'comments':comments}
     return render(request, "base/room.html", context)
 
 
-#CRUD Operations ----Room---
+#----------------------------- CRUD Operations ----------------
 
 @login_required(login_url='login')
 def CreateRoom(request):
