@@ -77,8 +77,12 @@ def home(request):
     #This is for the side bar to display
     topics = Topic.objects.all()
 
+    comments = Message.objects.filter(
+        Q(room__topic__name__icontains=q) #filters activity feed through topic if clicked
+        ).order_by("-created")
+
     #Context is the data being passed into the HTML page
-    context = {'rooms' : rooms , "topics": topics, "room_count": room_count}
+    context = {'rooms' : rooms , "topics": topics, "room_count": room_count, "comments":comments}
     return render(request, 'base/home.html', context)
 
 def room(request, pk):
