@@ -104,6 +104,14 @@ def room(request, pk):
     return render(request, "base/room.html", context)
 
 
+def userProfile(request, pk):
+    user = User.objects.get(id=pk)
+    comments = user.message_set.all().order_by('-created')
+    rooms = user.room_set.all()
+    topics = Topic.objects.all()
+    context = {'user':user, 'rooms':rooms, 'comments':comments, 'topics':topics} #important to use 'rooms' as our feed component uses that variable
+    return render(request, 'base/profile.html', context)
+
 #----------------------------- CRUD Operations ----------------
 
 @login_required(login_url='login')

@@ -3,7 +3,7 @@
     <hr>
     {% for comment in comments %}
     <div>
-        <small>@{{comment.user}}  </small>
+        <small><a href="{% url 'user-profile' comment.user.id%}">@{{comment.user}} </a> </small>
         <small>Replied to "{{comment.room}}" {{comment.created|timesince}}</small>
 
         <p>{{comment}}</p>
