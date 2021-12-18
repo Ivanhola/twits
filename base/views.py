@@ -1,13 +1,12 @@
 from django.shortcuts import render, redirect
 from django.db.models import Q
 from django.http import HttpResponse
-from . models import Room, Topic, Message
-from . forms import RoomForm, UserForm
-from django.contrib.auth.models import User
+from . models import Room, Topic, Message, User
+from . forms import MyUserCreationForm, RoomForm, UserForm, UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
+
 
 
 # ------------------------ USER LOGINS ---------------------------
@@ -19,15 +18,15 @@ def loginPage(request):
         return redirect('home')
 
     if request.method == 'POST': #if form was submitted
-        username = request.POST.get('username').lower() #lowercases username, they can login with whatever case
+        email = request.POST.get('email').lower() #lowercases username, they can login with whatever case
         password = request.POST.get('password')
 
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(email=email)
         except:
             messages.error(request, "User does not exist")
 
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(request, email=email, password=password)
 
         if user is not None:
             login(request, user) #adds session to database and browser
@@ -45,10 +44,10 @@ def logoutUser(request):
     return redirect('home')
 
 def registerPage(request):
-    form = UserCreationForm() #Default creation form for DJANGO users
+    form = MyUserCreationForm() #Default creation form for DJANGO users
 
     if request.method == "POST":
-        form = UserCreationForm(request.POST) #Passed in data
+        form = MyUserCreationForm(request.POST) #Passed in data
         if form.is_valid():
             user = form.save(commit=False) #Get user object but not save ("Freeze in time")
             user.username = user.username.lower() #cleaning up the user information
@@ -215,7 +214,7 @@ def updateUser(request):
     context = {'form': form}
 
     if request.method == "POST":
-        form = UserForm(request.POST, instance=user)
+        form = UserForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
             return redirect('user-profile', pk=user.id)
