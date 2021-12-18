@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.db.models import Q
 from django.http import HttpResponse
 from . models import Room, Topic, Message
-from . forms import RoomForm
+from . forms import RoomForm, UserForm
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -75,7 +75,7 @@ def home(request):
     room_count = rooms.count()
 
     #This is for the side bar to display
-    topics = Topic.objects.all()
+    topics = Topic.objects.all()[0:5]
 
     comments = Message.objects.filter(
         Q(room__topic__name__icontains=q) #filters activity feed through topic if clicked
@@ -111,6 +111,20 @@ def userProfile(request, pk):
     topics = Topic.objects.all()
     context = {'user':user, 'rooms':rooms, 'comments':comments, 'topics':topics} #important to use 'rooms' as our feed component uses that variable
     return render(request, 'base/profile.html', context)
+
+
+def topicsPage(request):
+    q = request.GET.get('q') if request.GET.get('q') != None else ''
+    topics = Topic.objects.filter(
+        Q(name__icontains=q)
+        )
+    context = {"topics":topics}
+    return render(request, 'base/topics.html', context)
+
+def activityPage(request):
+    comments = Message.objects.all()
+    context = {'comments':comments}
+    return render(request, 'base/activity.html', context)
 
 #----------------------------- CRUD Operations ----------------
 
@@ -192,3 +206,17 @@ def DeleteMessage(request, pk):
         message.delete()
         return redirect('home')
     return render(request, 'base/delete.html', {'obj':message})    
+
+
+@login_required(login_url='login')
+def updateUser(request):
+    user = request.user
+    form = UserForm(instance=user)
+    context = {'form': form}
+
+    if request.method == "POST":
+        form = UserForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('user-profile', pk=user.id)
+    return render(request, 'base/update-user.html', context)
