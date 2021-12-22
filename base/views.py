@@ -105,7 +105,7 @@ def room(request, pk):
 
 def userProfile(request, pk):
     user = User.objects.get(id=pk)
-    comments = user.message_set.all().order_by('-created')
+    comments = user.message_set.all().order_by('-created') #_set is a reverse lookup query for database relationships
     rooms = user.room_set.all()
     topics = Topic.objects.all()
     context = {'user':user, 'rooms':rooms, 'comments':comments, 'topics':topics} #important to use 'rooms' as our feed component uses that variable
